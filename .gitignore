@@ -9,12 +9,13 @@
 *.txt
 *.docx
 *.csv
+*.lnk
 *.zip
 *.log
 *.tar.gz
 *.pb
 **/results
 **/models
-CSV_datasets/
-SeedData/
-Prediction_datasets/
+CSV_datasets/**
+SeedData/**
+Prediction_datasets/**
