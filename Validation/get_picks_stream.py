@@ -70,30 +70,38 @@ def main():
    seedtestPath = "..\\CSV_datasets\\SeedTestTraces\\*.mseed"
    peshtest2Path = "..\\CSV_datasets\\train_dataset\\pesh\\Peshawar_dataset_shuffled_train_100hz_0filt_4s_HHZchannels_half_tails_postnorm_max\\test_traces\\*.mseed"
    peshtest3Path = "..\\CSV_datasets\\train_dataset\\pesh\\PESH_train_100hz_0filt_4s_HHallchannels_factor2_nperf1_tails_postnorm_max\\test_traces\\*.mseed"
-   isbtestPath = "..\\CSV_datasets\\train_dataset\\isb\\ISB_train_100hz__0.1_1filt_4s_HHZchannels_factor10_nperf2_tails_postnorm_max\\test_traces\\*.mseed"
-   dataPath =peshtest2Path
-   plotdir = 'PESH_caps_test2' # result folder
+   peshtest4Path = "..\\SeedData\\PESH_2016_2019\\test\\*.mseed"
+   isbtestPath = "..\\SeedData\\ISB_2018_2021\\test\\*.mseed"
+   irisPath = "..\\SeedData\\IRIS_2018_2020\\test\\*.mseed"
+   capspath = "..\\CSV_datasets\\capsData_Test"
+   dataPath =peshtest4Path
+   dataname = "PESH"
+   plotdir = f'{dataname}_caps_stftcnn13_stftcnn12_tolerancep5_probe' # result folder
+   
    ptime=60
-   if 'ISB' in plotdir: stime = 120
-   elif 'PESH' in plotdir: stime = 200
-   elif 'IRIS' in plotdir: stime = 300
+   if 'ISB' in dataname: stime = 120
+   elif 'PESH' in dataname: stime = 200
+   elif 'IRIS' in dataname: stime = 300
+   elif 'CAPS' in dataname: 
+      stime = 300
    stations= []#'AKA', 'NIL', 'SIMI'] # stations selected
    channels = []#'BH1', 'BH2', 'BHZ'] # channels selected
    f = []#40] # frequencies selected
-   overlap =4 # interval between algorithm application
+   interval =1 # interval between algorithm application
 
    dataset = SeedDataSet(dataPath, ptime=ptime, stime=stime)   # dataset object
    
    stream_list = dataset.stream_to_list(f=f, channels=channels, stations=stations) # obtain stream list 
    
-   stream_list= stream_list[::] # a certain number of traces can be selected
+   stream_list= stream_list[:10] # a certain number of traces can be selected
    
-   pick_modes = ['truth', 'pkbaer', 'stalta_slice', 'caps'] # modes selected 
-   probe_list = ['caps'] # modes whose output is plotted directly
-   plotpath = os.path.join('results', f'{plotdir}_overlap{overlap}') #
+   pick_modes = ['truth', 'caps', 'stftcnn13', 'stftcnn12'] # modes selected 
+   probe_list = ['caps', 'stftcnn13'] # modes whose output is plotted directly
+   snr_list=['caps', 'stftcnn13']
+   plotpath = os.path.join('results', f'{plotdir}_interval{interval}') #
    com.safe_mkdir(plotpath)     
    
-   test = Testbench(pick_modes=pick_modes, overlap=overlap) # Testbench object
+   test = Testbench(pick_modes=pick_modes, interval=interval, tolerance=0.5) # Testbench object
    plots = Plotting(test) # Plotting results
    log=[]
    
@@ -107,11 +115,21 @@ def main():
      log = test.get_picks(st, ptime=info['stt'] + dataset.ptime, stime=info['endt'] - dataset.stime, log=log)
      
      #test.display_picks() # can be used to simply display picks
-     plots.plot_picks(st, plotpath, n, probe=probe_list)
-   
+     plots.plot_picks(st, plotpath, n, probe=probe_list, snr_list=snr_list)
+     
    # evaluate picks and write to file
    log = test.evaluate(log)
-   com.to_file(log, os.path.join(plotpath, 'evaluation.txt')) 
+   com.to_file(log, os.path.join(plotpath, 'evaluation.txt'))
+
+   for mode in pick_modes:
+     for phase in ['p', 's']:
+       if (mode in test.eval_dict) and (mode in snr_list):
+         #print(mode, phase, test.eval_dict[mode][phase]['f1'])
+         #com.plot_scat(snr_list, test.eval_dict[mode][phase]['f1'], 'snr', f'{mode}_{phase}_f1', plotpath)
+         #com.plot_hist_wt(snr_list, test.eval_dict[mode][phase]['f1'], 'snr', plotpath, f'{mode}_{phase}_f1')
+         #com.plot_hist_wt(snr_list, test.eval_dict[mode][phase]['f1'], 'snr', plotpath, f'{mode}_{phase}_f1')
+         com.plot_hist_2d(snr_list, test.eval_dict[mode][phase]['f1'], 'snr', 'f1', plotpath, f'{mode}_{phase}_f1')
+         com.plot_2d(snr_list, test.eval_dict[mode][phase]['f1'], 'snr', 'f1', plotpath, f'plot_{mode}_{phase}_f1')
 
    # write class configuration to a text list 
    data_config = com.get_class_config(dataset, [com.decorate('Data Set Configuration')])  
