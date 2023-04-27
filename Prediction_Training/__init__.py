@@ -1,0 +1,5 @@
+"""
+This folder contains the code for training the EarthQuake prediction network for s amplitude and time
+"""
+import sys,os
+sys.path.insert(0,os.path.dirname(os.path.realpath(__file__)))
