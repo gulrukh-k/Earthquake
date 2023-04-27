@@ -1,0 +1,16 @@
+**/data
+*.mseed
+*.png
+*.pdf
+*.pyc
+*.h5
+*.hdf5
+*.txt
+*.docx
+*.csv
+*.zip
+*.log
+*.tar.gz
+**/results
+CSV_datasets/
+SeedData/
